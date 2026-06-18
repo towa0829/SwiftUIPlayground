@@ -48,15 +48,30 @@ struct ProfileCardView: View {
                     .foregroundStyle(.white.opacity(0.8))
 
                 Text(profile.bio)
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.9))
                     .lineLimit(2)
 
                 // フォロワー統計
                 HStack(spacing: 20) {
-                    StatLabel(value: viewModel.formattedCount(profile.postsCount), title: "投稿")
-                    StatLabel(value: viewModel.formattedCount(profile.followersCount), title: "フォロワー")
-                    StatLabel(value: viewModel.formattedCount(profile.followingCount), title: "フォロー中")
+                    ProfileStatView(
+                        value: viewModel.formattedCount(profile.postsCount),
+                        title: "投稿",
+                        valueColor: .white,
+                        titleColor: .white.opacity(0.7)
+                    )
+                    ProfileStatView(
+                        value: viewModel.formattedCount(profile.followersCount),
+                        title: "フォロワー",
+                        valueColor: .white,
+                        titleColor: .white.opacity(0.7)
+                    )
+                    ProfileStatView(
+                        value: viewModel.formattedCount(profile.followingCount),
+                        title: "フォロー中",
+                        valueColor: .white,
+                        titleColor: .white.opacity(0.7)
+                    )
                 }
             }
             .padding(20)
@@ -76,18 +91,6 @@ struct ProfileCardView: View {
         // sheet: モーダルな画面を下からスライドアップ表示する
         .sheet(isPresented: $showDetail) {
             ProfileDetailSheet(profile: profile, viewModel: viewModel)
-        }
-    }
-}
-
-struct StatLabel: View {
-    let value: String
-    let title: String
-
-    var body: some View {
-        VStack(spacing: 2) {
-            Text(value).font(.subheadline.bold()).foregroundStyle(.white)
-            Text(title).font(.caption2).foregroundStyle(.white.opacity(0.7))
         }
     }
 }

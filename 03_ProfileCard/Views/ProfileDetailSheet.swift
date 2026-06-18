@@ -5,6 +5,10 @@ struct ProfileDetailSheet: View {
     @ObservedObject var viewModel: ProfileViewModel
     @Environment(\.dismiss) private var dismiss
 
+    /// アバターをバナーの下端に半分だけ重ねて表示するためのサイズ。
+    /// offsetとpaddingはこの値から導出し、マジックナンバーを避ける。
+    private let avatarDiameter: CGFloat = 100
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -22,15 +26,15 @@ struct ProfileDetailSheet: View {
                             )
                             .frame(height: 120)
 
-                        // アバター (ZStackで重ねる)
+                        // アバター (バナー下端から半分だけ突き出すように重ねる)
                         Image(systemName: profile.avatarSystemImage)
-                            .font(.system(size: 80))
+                            .font(.system(size: avatarDiameter * 0.8))
                             .foregroundStyle(.white)
-                            .background(Circle().fill(profile.accentColor).frame(width: 100, height: 100))
+                            .background(Circle().fill(profile.accentColor).frame(width: avatarDiameter, height: avatarDiameter))
                             .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                            .offset(y: 40)
+                            .offset(y: avatarDiameter / 2)
                     }
-                    .padding(.bottom, 40)
+                    .padding(.bottom, avatarDiameter / 2)
 
                     // プロフィール情報
                     VStack(spacing: 8) {
@@ -46,18 +50,21 @@ struct ProfileDetailSheet: View {
                     }
 
                     // 統計
-                    HStack(spacing: 40) {
-                        DetailStatView(
+                    HStack(spacing: 32) {
+                        ProfileStatView(
                             value: viewModel.formattedCount(profile.postsCount),
-                            title: "投稿"
+                            title: "投稿",
+                            valueFont: .title3.bold()
                         )
-                        DetailStatView(
+                        ProfileStatView(
                             value: viewModel.formattedCount(profile.followersCount),
-                            title: "フォロワー"
+                            title: "フォロワー",
+                            valueFont: .title3.bold()
                         )
-                        DetailStatView(
+                        ProfileStatView(
                             value: viewModel.formattedCount(profile.followingCount),
-                            title: "フォロー中"
+                            title: "フォロー中",
+                            valueFont: .title3.bold()
                         )
                     }
                     .padding()
@@ -101,18 +108,6 @@ struct ProfileDetailSheet: View {
                     Button("閉じる") { dismiss() }
                 }
             }
-        }
-    }
-}
-
-struct DetailStatView: View {
-    let value: String
-    let title: String
-
-    var body: some View {
-        VStack(spacing: 4) {
-            Text(value).font(.title3.bold())
-            Text(title).font(.caption).foregroundStyle(.secondary)
         }
     }
 }
