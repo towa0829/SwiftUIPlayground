@@ -305,3 +305,10 @@ struct ProfileListView: View {
 - [ ] infoボタンで下からシートが開く
 - [ ] シート内に @Environment(\.dismiss) で閉じるボタンが動く
 - [ ] 3枚のカードがScrollViewに並んでいる
+
+---
+
+## 改良ノート（写経後の修正）
+- 未使用だった `@Published var selectedProfile` と、`isFollowing` の重複初期化を削除。
+- bio・統計ラベルが `.caption`/`.caption2` で小さすぎたため `.subheadline`/`.footnote` に昇格。
+- カードと詳細シートで重複していた統計表示用Viewを `Views/Components/ProfileStatView.swift` に統合。

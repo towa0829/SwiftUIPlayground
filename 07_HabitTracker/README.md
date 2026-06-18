@@ -19,18 +19,22 @@
 ├── Models/
 │   └── Habit.swift              # 習慣データモデル（progress計算含む）
 ├── ViewModels/
-│   └── HabitStore.swift         # ObservableObject（習慣のCRUD）
+│   └── HabitStore.swift         # ObservableObject（習慣のCRUD・streak管理）
 └── Views/
     ├── HabitListView.swift      # 一覧（@StateObject）
     ├── HabitRowView.swift       # 各行カード（ProgressView）
     ├── HabitDetailView.swift    # 詳細画面（円形ProgressView）
-    └── AddHabitView.swift       # 追加シート
+    ├── AddHabitView.swift       # 追加シート
+    └── Components/
+        ├── SummaryCard.swift           # 全体進捗サマリーカード
+        └── CircularProgressStyle.swift # 円形ProgressViewStyle
 ```
 
 ## セットアップ
 1. Xcodeで新規 SwiftUI プロジェクト作成
-2. このフォルダのSwiftファイルをプロジェクトに追加
-3. `ContentView` の body を `HabitListView()` に変更
+2. デフォルトの `ContentView.swift` を削除
+3. このフォルダのSwiftファイルを全てプロジェクトに追加
+4. `@main` App struct の `body` を `HabitListView()` に変更
 
 ## 学習ポイント
 

@@ -240,3 +240,10 @@ struct SettingsView: View {
 - [ ] 3種類のPickerスタイルを確認した
 - [ ] アプリ再起動後も設定値が保持される（AppStorage の動作確認）
 - [ ] リセットでデフォルト値に戻る
+
+---
+
+## 改良ノート（写経後の修正）
+- テーマ（ライト/ダーク/システム）とフォントサイズを `SettingsViewModel` 経由でルートに実際に配線し、見た目に反映されるようにした（写経時点では設定項目を保持するだけで効果がなかった）。
+- 「すべての設定をリセット」が `UserDefaults` を直接書き換えるだけでUIに即反映されない問題を修正し、リセット後すぐに表示が変わるようにした。
+- `PasswordPlaceholderView` を `Views/SettingsView.swift` から独立ファイルへ分離（`#Preview` 付き）。

@@ -21,13 +21,16 @@
 └── Views/
     ├── PhotoGalleryView.swift  # グリッド一覧（LazyVGrid + ScrollView）
     ├── PhotoGridCell.swift     # グリッドセル（AsyncImage）
-    └── PhotoDetailView.swift  # 詳細画面
+    ├── PhotoDetailView.swift   # 詳細画面
+    └── Components/
+        └── CategoryChip.swift  # カテゴリフィルターチップ
 ```
 
 ## セットアップ
 1. Xcodeで新規 SwiftUI プロジェクト作成（Info.plistにネットワーク許可不要）
-2. このフォルダのSwiftファイルをプロジェクトに追加
-3. `ContentView` の body を `PhotoGalleryView()` に変更
+2. デフォルトの `ContentView.swift` を削除
+3. このフォルダのSwiftファイルを全てプロジェクトに追加
+4. `@main` App struct の `body` を `PhotoGalleryView()` に変更
 
 ## 学習ポイント
 

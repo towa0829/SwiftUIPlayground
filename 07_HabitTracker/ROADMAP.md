@@ -393,3 +393,10 @@ struct HabitDetailView: View {
 - [ ] 詳細画面の円形プログレスがアニメーションする
 - [ ] 習慣の追加がシートから行える
 - [ ] リストと詳細画面で進捗が同期している（同じ HabitStore インスタンス）
+
+---
+
+## 改良ノート（写経後の修正）
+- **streakロジックのバグ修正**: 達成・リセットの組み合わせでstreakが正しく増減しなかった問題を、「目標達成の瞬間に+1、未達に戻ったら-1」という単一ルールに統一（`syncStreak`）。
+- `HabitStore.swift` に `import SwiftUI` が無く `Color` が解決できなかったバグを修正。
+- `HabitListView.swift` に同居していた `SummaryCard`/`CircularProgressStyle` を `Views/Components/` へ分離。

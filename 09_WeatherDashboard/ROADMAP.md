@@ -302,3 +302,10 @@ struct HourlyForecastRow: View {
 - [ ] Previewに .environmentObject() を忘れるとクラッシュすることを確認した
 - [ ] 都市切り替えで全コンポーネントが同時に更新される
 - [ ] @StateObject（所有）/@ObservedObject（参照）/@EnvironmentObject（環境から取得）の3つを使い分けられるようになった
+
+---
+
+## 改良ノート（写経後の修正）
+- **`refreshWeather()` が no-op だったバグを修正**: `objectWillChange.send()` だけで実際の値が変わらなかった処理を、気温・体感温度・湿度・風速を実際にランダム変動させる実装に変更。
+- 横スクロール（都市選択・時間別予報）の内容に `.padding(.horizontal)` を付け、端が画面端に張り付かないように修正。
+- 多数のstructが同居していた `WeatherCardView.swift`（4 struct）/`WeatherDashboardView.swift`（3 struct）を分割し、`HourlyForecastRow`/`WeeklyForecastCard`/`WeatherDetailGrid`/`WeatherMainCard` と `Views/Components/{WeatherDetailCell,CityPickerView}` へ整理。

@@ -15,19 +15,22 @@
 ```
 08_ProductSearch/
 ├── Models/
-│   └── Product.swift              # 商品モデル + カテゴリ列挙型
+│   └── Product.swift              # 商品モデル + カテゴリ列挙型（emoji/color含む）
 ├── ViewModels/
 │   └── ProductViewModel.swift     # 検索・フィルタ・ソートロジック
 └── Views/
     ├── ProductListView.swift      # 商品一覧（searchable + フィルターバー）
     ├── ProductRowView.swift       # 商品行カード
-    └── ProductDetailView.swift   # 商品詳細
+    ├── ProductDetailView.swift    # 商品詳細
+    └── Components/
+        └── FilterBar.swift        # カテゴリフィルターバー
 ```
 
 ## セットアップ
 1. Xcodeで新規 SwiftUI プロジェクト作成
-2. このフォルダのSwiftファイルをプロジェクトに追加
-3. `ContentView` の body を `ProductListView()` に変更
+2. デフォルトの `ContentView.swift` を削除
+3. このフォルダのSwiftファイルを全てプロジェクトに追加
+4. `@main` App struct の `body` を `ProductListView()` に変更
 
 ## 学習ポイント
 

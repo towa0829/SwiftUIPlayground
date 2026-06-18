@@ -292,3 +292,10 @@ struct ProfileTabView: View {
 - [ ] ホームでいいねができる
 - [ ] 新規投稿でフィードの先頭に追加される
 - [ ] selectedTab でプログラマティックな切り替えの仕組みを理解した
+
+---
+
+## 改良ノート（写経後の修正）
+- **stale-snapshotバグ修正**: 投稿詳細画面が `let post` の値コピーを保持していたため、詳細内のいいねがVMの更新を反映しなかった。VMの配列からidで都度取得する `currentPost` 方式に修正（07_HabitTracker の `currentHabit` と同じパターン）。
+- 通知バッジのハードコード `.badge(3)` をデータ駆動に変更。
+- `HomeView.swift` に同居していた4つのstructを `PostRowView`/`NewPostView`/`PostDetailView` へ分割、`ExploreView.swift` から `NotificationsView` を分離、`Views/Components/` に `ProfileStatView`/`SuggestionRow` を抽出。

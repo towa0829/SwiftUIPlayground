@@ -9,6 +9,7 @@
 - 都市切り替えで天気が変化
 - 時間別・週間予報
 - 湿度・風速などの詳細グリッド
+- 更新ボタンで気温・湿度・風速などが実際にランダム変動する（`refreshWeather()`）
 
 ## ファイル構成
 ```
@@ -16,18 +17,25 @@
 ├── Models/
 │   └── Weather.swift               # 天気データモデル全般
 ├── ViewModels/
-│   └── WeatherViewModel.swift      # EnvironmentObjectとして共有
+│   └── WeatherViewModel.swift      # EnvironmentObjectとして共有（refreshWeatherで実際に変動）
 ├── App/
 │   └── WeatherApp.swift            # EnvironmentObject注入ポイント
 └── Views/
     ├── WeatherDashboardView.swift  # メイン画面（EnvironmentObject受け取り）
-    └── WeatherCardView.swift       # 各カードコンポーネント
+    ├── WeatherMainCard.swift       # 現在の天気メインカード
+    ├── HourlyForecastRow.swift     # 時間別予報（横スクロール）
+    ├── WeeklyForecastCard.swift    # 週間予報カード
+    ├── WeatherDetailGrid.swift     # 湿度・風速などの詳細グリッド
+    └── Components/
+        ├── CityPickerView.swift    # 都市切り替えチップ（横スクロール）
+        └── WeatherDetailCell.swift # 詳細グリッドの1セル
 ```
 
 ## セットアップ
 1. Xcodeで新規 SwiftUI プロジェクト作成
-2. このフォルダのSwiftファイルをプロジェクトに追加
-3. `ContentView` の body を `WeatherAppRoot()` に変更
+2. デフォルトの `ContentView.swift` を削除
+3. このフォルダのSwiftファイルを全てプロジェクトに追加
+4. `@main` App struct の `body` を `WeatherAppRoot()` に変更
 
 ## 学習ポイント
 

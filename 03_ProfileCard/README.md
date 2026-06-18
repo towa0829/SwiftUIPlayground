@@ -21,13 +21,16 @@
 └── Views/
     ├── ProfileListView.swift     # カード一覧画面（エントリーポイント）
     ├── ProfileCardView.swift     # グラデーションカードUI（ZStack + overlay + sheet）
-    └── ProfileDetailSheet.swift  # モーダルシート詳細画面
+    ├── ProfileDetailSheet.swift  # モーダルシート詳細画面
+    └── Components/
+        └── ProfileStatView.swift # 統計表示（カード/詳細シートで共用）
 ```
 
 ## セットアップ
 1. Xcodeで新規 SwiftUI プロジェクト作成
-2. このフォルダのSwiftファイルをプロジェクトに追加
-3. `ContentView` の body を `ProfileListView()` に変更
+2. デフォルトの `ContentView.swift` を削除
+3. このフォルダのSwiftファイルを全てプロジェクトに追加
+4. `@main` App struct の `body` を `ProfileListView()` に変更
 
 ## 学習ポイント
 

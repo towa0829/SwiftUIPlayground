@@ -20,14 +20,18 @@
 │   └── FeedViewModel.swift         # フィードのCRUDロジック
 └── Views/
     ├── FeedView.swift              # フィード一覧（エントリーポイント）
+    ├── FeedPostCard.swift          # フィードの投稿カード
     ├── NewPostSheet.swift          # 新規投稿シート（@Binding活用）
-    └── PostDetailFullScreen.swift  # 詳細フルスクリーン
+    ├── PostDetailFullScreen.swift  # 詳細フルスクリーン（currentPostで都度参照）
+    └── Components/
+        └── CharacterCountView.swift # 文字数カウンター（上限超で警告色）
 ```
 
 ## セットアップ
 1. Xcodeで新規 SwiftUI プロジェクト作成
-2. このフォルダのSwiftファイルをプロジェクトに追加
-3. `ContentView` の body を `FeedView()` に変更
+2. デフォルトの `ContentView.swift` を削除
+3. このフォルダのSwiftファイルを全てプロジェクトに追加
+4. `@main` App struct の `body` を `FeedView()` に変更
 
 ## 学習ポイント
 

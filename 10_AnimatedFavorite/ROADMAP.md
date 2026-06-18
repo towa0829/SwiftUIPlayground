@@ -372,3 +372,11 @@ struct AnimatedMainView: View {
 | `.transition(.move(...))` | View追加・削除のトランジション |
 | `.animation(_:value:)` | 値の変化に自動追随 |
 | `matchedGeometryEffect` | 2箇所のViewを繋ぐヒーローアニメーション |
+
+---
+
+## 改良ノート（写経後の修正）
+- **`matchedGeometryEffect` が機能しないバグを修正**: グリッドとお気に入りタブが別々の `@Namespace` を持ち、かつ別タブ（同時にView階層に存在しない）のため、ヒーローアニメーションは原理的に発火しなかった。共有Namespaceでは解決できない構成だったため、各画面内で完結する「弾む/縮小」アニメーションに変更し、発火タイミングは `ItemViewModel`（`toggleFavoriteWithBounce`/`removeFavoriteAfterShrink`）で管理するようにした。
+- `FavoritesView` 側にあった手動 `DispatchQueue` 駆動と親の `.transition`/`.animation` が二重に掛かってグリッチしていた処理を解消（ハートを縮小させた後にVM経由で削除、スケールのリセット処理は削除）。
+- グリッド名・ハートアイコンの `.caption.bold()`/`.subheadline` を `.subheadline.bold()`/`.title3` に昇格。
+- `ItemCell`/`FavoriteRow` を `Views/Components/` へ分離。

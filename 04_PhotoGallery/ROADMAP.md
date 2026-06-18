@@ -319,3 +319,11 @@ struct PhotoDetailView: View {
 - [ ] カテゴリチップで絞り込みができる
 - [ ] タップで詳細画面へ遷移する
 - [ ] `GridItem(.flexible)` / `.fixed` / `.adaptive` の違いを試した
+
+---
+
+## 改良ノート（写経後の修正）
+- `Photo.swift` の `URL(string:)!` 強制アンラップを optional 保持に変更し、無効なURLでもクラッシュしないようにした（`AsyncImage` は nil を許容できる）。
+- グリッドセルの固定 `frame` と `aspectRatio` 指定が競合していたのを解消し、正方形セルが安定するようにした。
+- いいねオーバーレイの `.caption2` を見やすいサイズへ昇格し、詳細画面の左右マージンを一覧画面と統一。
+- `CategoryChip` を `Views/Components/` へ分離。

@@ -289,3 +289,11 @@ struct PostDetailFullScreen: View {
 - [ ] 「全画面で見る」で FullScreenCover が全画面表示される
 - [ ] どちらも dismiss() で閉じられる
 - [ ] Sheet と FullScreenCover の見た目の違いを確認した
+
+---
+
+## 改良ノート（写経後の修正）
+- **stale-snapshotバグ修正**: `PostDetailFullScreen` が値コピーの `post` を保持していた問題を、VMから都度取得する `currentPost` 方式に修正（05_TabSNS と同方式）。
+- 文字数上限（200字）が `CharacterCountView` の警告表示のみで投稿可否に反映されていなかったため、`isFormValid` に上限チェックを追加。
+- 削除処理を配列インデックスベースからidベースに変更し、ズレに強くした。
+- `FeedPostCard` を独立ファイルへ、`CharacterCountView` を `Views/Components/` へ分離。

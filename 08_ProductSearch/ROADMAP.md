@@ -334,3 +334,10 @@ struct ProductDetailView: View {
 - [ ] ソートメニューでリスト順が変わる
 - [ ] 0件時に ContentUnavailableView が表示される
 - [ ] お気に入りのトグルが動く
+
+---
+
+## 改良ノート（写経後の修正）
+- カテゴリの絵文字/色が非網羅な三項演算子で出し分けられ `.sports` が欠落していたバグを、`ProductCategory` の `emoji`/`color` プロパティに一本化して修正。
+- `listRowInsets` と行内 `.padding()` の二重パディングを解消し、詳細画面の左右マージンを一覧と統一。
+- `FilterBar` を `Views/Components/` へ分離。

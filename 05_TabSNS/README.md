@@ -20,15 +20,23 @@
 │   └── HomeViewModel.swift    # フィードのロジック
 └── Views/
     ├── MainTabView.swift      # TabView（エントリーポイント）
-    ├── HomeView.swift         # ホームフィード + 投稿行 + 詳細
-    ├── ExploreView.swift      # 探索 + 通知View
-    └── ProfileTabView.swift   # プロフィールタブ
+    ├── HomeView.swift         # ホームフィード一覧
+    ├── PostRowView.swift      # フィードの投稿行
+    ├── NewPostView.swift      # 新規投稿シート
+    ├── PostDetailView.swift   # 投稿詳細（currentPostで都度参照）
+    ├── ExploreView.swift      # 探索タブ
+    ├── NotificationsView.swift # 通知タブ
+    ├── ProfileTabView.swift   # プロフィールタブ
+    └── Components/
+        ├── ProfileStatView.swift # 統計表示
+        └── SuggestionRow.swift   # おすすめユーザー行
 ```
 
 ## セットアップ
 1. Xcodeで新規 SwiftUI プロジェクト作成
-2. このフォルダのSwiftファイルをプロジェクトに追加
-3. `ContentView` の body を `MainTabView()` に変更
+2. デフォルトの `ContentView.swift` を削除
+3. このフォルダのSwiftファイルを全てプロジェクトに追加
+4. `@main` App struct の `body` を `MainTabView()` に変更
 
 ## 学習ポイント
 

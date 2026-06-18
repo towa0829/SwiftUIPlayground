@@ -2,15 +2,16 @@
 
 ## 学習テーマ
 - `Animation` — スプリング・イージングアニメーション
-- `matchedGeometryEffect` — 2つのViewを連携したヒーローアニメーション
+- `matchedGeometryEffect` — 2つのViewを連携したヒーローアニメーション（概念として学ぶ。下記「完成イメージ」参照）
 - `.transition` — View追加・削除時のアニメーション
 
 ## 完成イメージ
 - フレームワークグリッド（3列）
-- ハートタップでお気に入り登録（弾むアニメーション）
+- ハートタップでお気に入り登録（弾むアニメーション、ViewModelが発火タイミングを管理）
 - お気に入りタブでリスト表示
-- アイテム削除時のスライドアウトアニメーション
-- グリッド↔リスト間でハートが飛ぶmatchedGeometryEffect
+- アイテム削除時のスライドアウトアニメーション（ハートの縮小→ViewModel経由で削除）
+
+> **学習ノート**: 当初は「グリッド↔お気に入りリスト間でハートが飛ぶ `matchedGeometryEffect`」を狙ったが、両者は別タブ（`TabView`）にあり同時にView階層へ存在しないため、`matchedGeometryEffect` は原理的に発火しない。これは実際にハマりやすい典型的な誤用パターンなので、`matchedGeometryEffect` 自体は学習テーマとして残しつつ、実装は**各画面内で完結するバウンス/縮小アニメーション**（ViewModelがタイミングを管理）に変更している。
 
 ## ファイル構成
 ```
@@ -18,17 +19,21 @@
 ├── Models/
 │   └── FavoriteItem.swift        # アイテムモデル
 ├── ViewModels/
-│   └── ItemViewModel.swift       # お気に入り管理
+│   └── ItemViewModel.swift       # お気に入り管理 + アニメーションタイミング管理
 └── Views/
     ├── AnimatedMainView.swift    # TabView（エントリーポイント）
-    ├── ItemGridView.swift        # グリッド + アニメーション
-    └── FavoritesView.swift       # お気に入りリスト + トランジション
+    ├── ItemGridView.swift        # グリッド一覧
+    ├── FavoritesView.swift       # お気に入りリスト + トランジション
+    └── Components/
+        ├── ItemCell.swift        # グリッドセル（弾むアニメーション）
+        └── FavoriteRow.swift     # お気に入り行（縮小アニメーション）
 ```
 
 ## セットアップ
 1. Xcodeで新規 SwiftUI プロジェクト作成
-2. このフォルダのSwiftファイルをプロジェクトに追加
-3. `ContentView` の body を `AnimatedMainView()` に変更
+2. デフォルトの `ContentView.swift` を削除
+3. このフォルダのSwiftファイルを全てプロジェクトに追加
+4. `@main` App struct の `body` を `AnimatedMainView()` に変更
 
 ## 学習ポイント
 
