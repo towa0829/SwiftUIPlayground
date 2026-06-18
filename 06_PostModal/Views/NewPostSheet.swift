@@ -8,9 +8,12 @@ struct NewPostSheet: View {
     @State private var title = ""
     @State private var bodyText = ""
 
+    private let bodyLimit = 200
+
     var isFormValid: Bool {
         !title.trimmingCharacters(in: .whitespaces).isEmpty &&
-        !bodyText.trimmingCharacters(in: .whitespaces).isEmpty
+        !bodyText.trimmingCharacters(in: .whitespaces).isEmpty &&
+        bodyText.count <= bodyLimit
     }
 
     var body: some View {
@@ -28,7 +31,7 @@ struct NewPostSheet: View {
 
                 Section {
                     // @Binding の使い方サンプル
-                    CharacterCountView(text: $bodyText, limit: 200)
+                    CharacterCountView(text: $bodyText, limit: bodyLimit)
                 }
             }
             .navigationTitle("新規投稿")
@@ -53,26 +56,6 @@ struct NewPostSheet: View {
         // presentationDetents: シートの高さを制御
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
-    }
-}
-
-// @Binding の学習用: 親からテキストのBindingを受け取って文字数カウント
-struct CharacterCountView: View {
-    @Binding var text: String  // 親Viewのstateへの参照
-    let limit: Int
-
-    var count: Int { text.count }
-    var isOverLimit: Bool { count > limit }
-
-    var body: some View {
-        HStack {
-            Text("文字数")
-            Spacer()
-            Text("\(count) / \(limit)")
-                .foregroundStyle(isOverLimit ? .red : .secondary)
-                .fontWeight(isOverLimit ? .bold : .regular)
-        }
-        .font(.subheadline)
     }
 }
 

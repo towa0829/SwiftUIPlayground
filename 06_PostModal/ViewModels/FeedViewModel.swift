@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import SwiftUI
 
 class FeedViewModel: ObservableObject {
     @Published var posts: [FeedPost] = FeedPost.samples
@@ -11,9 +12,12 @@ class FeedViewModel: ObservableObject {
     }
 
     func addPost(title: String, body: String) {
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedBody = body.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitle.isEmpty, !trimmedBody.isEmpty else { return }
         let post = FeedPost(
-            title: title,
-            body: body,
+            title: trimmedTitle,
+            body: trimmedBody,
             authorName: "自分",
             authorIcon: "person.crop.circle.fill"
         )
@@ -22,5 +26,11 @@ class FeedViewModel: ObservableObject {
 
     func deletePost(_ post: FeedPost) {
         posts.removeAll { $0.id == post.id }
+    }
+
+    /// IndexSetをまとめて削除する。配列をforEachで個別削除すると
+    /// 削除のたびにindexがずれて誤った要素を消す恐れがあるため remove(atOffsets:) を使う。
+    func deletePosts(at offsets: IndexSet) {
+        posts.remove(atOffsets: offsets)
     }
 }
