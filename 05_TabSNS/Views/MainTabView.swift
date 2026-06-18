@@ -22,7 +22,7 @@ struct MainTabView: View {
             .tag(Tab.home)
 
             NavigationStack {
-                ExploreView()
+                ExploreView(viewModel: homeViewModel)
             }
             .tabItem {
                 Label("探索", systemImage: "magnifyingglass")
@@ -30,16 +30,16 @@ struct MainTabView: View {
             .tag(Tab.explore)
 
             NavigationStack {
-                NotificationsView()
+                NotificationsView(viewModel: homeViewModel)
             }
             .tabItem {
                 Label("通知", systemImage: "bell.fill")
             }
-            .badge(3)  // バッジ数を表示
+            .badge(homeViewModel.notifications.count)  // 通知件数と連動したバッジ
             .tag(Tab.notifications)
 
             NavigationStack {
-                ProfileTabView()
+                ProfileTabView(viewModel: homeViewModel)
             }
             .tabItem {
                 Label("プロフィール", systemImage: "person.fill")

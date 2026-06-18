@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ExploreView: View {
+    @ObservedObject var viewModel: HomeViewModel
     let trendingTopics = ["#SwiftUI", "#iOS開発", "#Swift", "#Xcode", "#WWDC", "#CoreData", "#SwiftData", "#UIKit"]
 
     var body: some View {
@@ -27,21 +28,23 @@ struct ExploreView: View {
                     .font(.headline)
                     .padding(.horizontal)
 
-                ForEach(SNSUser.suggestions) { user in
-                    HStack(spacing: 12) {
-                        Image(systemName: user.avatarIcon)
-                            .font(.title2)
-                            .foregroundStyle(.purple)
-                        VStack(alignment: .leading) {
-                            Text(user.name).font(.subheadline.bold())
-                            Text(user.bio).font(.caption).foregroundStyle(.secondary)
+                VStack(spacing: 12) {
+                    ForEach(SNSUser.suggestions) { user in
+                        HStack(spacing: 12) {
+                            Image(systemName: user.avatarIcon)
+                                .font(.title2)
+                                .foregroundStyle(.purple)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(user.name).font(.subheadline.bold())
+                                Text(user.bio).font(.footnote).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Text("\(user.followersCount)人")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
                         }
-                        Spacer()
-                        Text("\(user.followersCount)人")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        .padding(.horizontal)
                     }
-                    .padding(.horizontal)
                 }
             }
             .padding(.vertical)
@@ -50,28 +53,8 @@ struct ExploreView: View {
     }
 }
 
-struct NotificationsView: View {
-    let notifications = [
-        "Hana Tanaka があなたの投稿にいいねしました",
-        "Kenji Suzuki があなたをフォローしました",
-        "Yuki Kobayashi があなたの投稿にコメントしました",
-    ]
-
-    var body: some View {
-        List(notifications, id: \.self) { notification in
-            HStack(spacing: 12) {
-                Image(systemName: "bell.fill")
-                    .foregroundStyle(.orange)
-                Text(notification)
-                    .font(.subheadline)
-            }
-        }
-        .navigationTitle("通知")
-    }
-}
-
 #Preview {
     NavigationStack {
-        ExploreView()
+        ExploreView(viewModel: HomeViewModel())
     }
 }
