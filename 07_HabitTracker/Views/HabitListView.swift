@@ -43,54 +43,6 @@ struct HabitListView: View {
     }
 }
 
-struct SummaryCard: View {
-    // @ObservedObject: 外部から受け取ったObservableObjectを購読
-    @ObservedObject var store: HabitStore
-
-    var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                VStack(alignment: .leading) {
-                    Text("今日の進捗")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text("\(store.totalCompleted) / \(store.habits.count) 完了")
-                        .font(.title2.bold())
-                }
-                Spacer()
-                // ProgressView: 進捗を視覚的に表示（円形）
-                ProgressView(value: store.overallProgress)
-                    .progressViewStyle(CircularProgressStyle())
-            }
-
-            // ProgressView: 線形（デフォルト）
-            ProgressView(value: store.overallProgress)
-                .tint(.green)
-        }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-    }
-}
-
-// カスタムProgressViewStyle
-struct CircularProgressStyle: ProgressViewStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        ZStack {
-            Circle()
-                .stroke(Color.gray.opacity(0.2), lineWidth: 6)
-            Circle()
-                .trim(from: 0, to: configuration.fractionCompleted ?? 0)
-                .stroke(Color.green, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-                .animation(.easeInOut, value: configuration.fractionCompleted)
-            Text("\(Int((configuration.fractionCompleted ?? 0) * 100))%")
-                .font(.caption2.bold())
-        }
-        .frame(width: 56, height: 56)
-    }
-}
-
 #Preview {
     HabitListView()
 }

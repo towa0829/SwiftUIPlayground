@@ -15,7 +15,7 @@ struct HabitRowView: View {
                         .font(.subheadline.bold())
                         .foregroundStyle(.primary)
                     Text("\(habit.completedCount) / \(habit.targetCount)")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
 
