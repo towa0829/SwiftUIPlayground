@@ -1,6 +1,6 @@
 # 10 AnimatedFavorite ロードマップ
 
-完成形: withAnimation / matchedGeometryEffect / .transition でアニメーションを体感する
+完成形: withAnimation / scaleEffect / .transition で「弾む→お気に入り」「縮小→削除」を体感する
 
 ---
 
@@ -19,10 +19,18 @@ struct FavoriteItem: Identifiable {
     var color: Color
     var isFavorited: Bool
 
-    init(id: UUID = UUID(), name: String, emoji: String,
-         color: Color, isFavorited: Bool = false) {
-        self.id = id; self.name = name; self.emoji = emoji
-        self.color = color; self.isFavorited = isFavorited
+    init(
+        id: UUID = UUID(),
+        name: String,
+        emoji: String,
+        color: Color,
+        isFavorited: Bool = false
+    ) {
+        self.id = id
+        self.name = name
+        self.emoji = emoji
+        self.color = color
+        self.isFavorited = isFavorited
     }
 }
 
@@ -30,36 +38,71 @@ extension FavoriteItem {
     static let samples: [FavoriteItem] = [
         FavoriteItem(name: "SwiftUI", emoji: "🍎", color: .blue, isFavorited: true),
         FavoriteItem(name: "Combine", emoji: "🔗", color: .purple),
-        FavoriteItem(name: "Swift",   emoji: "⚡️", color: .orange, isFavorited: true),
-        FavoriteItem(name: "Xcode",   emoji: "🛠",  color: .cyan),
+        FavoriteItem(name: "Swift", emoji: "⚡️", color: .orange, isFavorited: true),
+        FavoriteItem(name: "Xcode", emoji: "🛠", color: .cyan),
+        FavoriteItem(name: "Core Data", emoji: "🗄", color: .brown),
         FavoriteItem(name: "WidgetKit", emoji: "📱", color: .green, isFavorited: true),
-        FavoriteItem(name: "ARKit",   emoji: "🥽",  color: .indigo),
+        FavoriteItem(name: "ARKit", emoji: "🥽", color: .indigo),
+        FavoriteItem(name: "Metal", emoji: "🎮", color: .red),
+        FavoriteItem(name: "CloudKit", emoji: "☁️", color: .teal),
+        FavoriteItem(name: "StoreKit", emoji: "💳", color: .mint),
+        FavoriteItem(name: "AVFoundation", emoji: "🎵", color: .pink),
+        FavoriteItem(name: "MapKit", emoji: "🗺", color: .yellow),
     ]
 }
 ```
+グリッドが3列なので、最低でも4行分（12件）のサンプルを用意しておくとスクロールも確認できる。
 
-### 1-2: ItemViewModel
+### 1-2: ItemViewModel（アニメーションの発火タイミングを一元管理する）
 ```swift
 import Foundation
+import Combine
 
 class ItemViewModel: ObservableObject {
     @Published var items: [FavoriteItem] = FavoriteItem.samples
 
-    var favoritedItems: [FavoriteItem] { items.filter(\.isFavorited) }
+    // グリッド側でハートをタップした瞬間に弾むアイテムのID。
+    // 弾むアニメーションのタイミング（いつ始まり、いつ終わるか）はVMが一元管理する。
+    @Published var bouncingItemID: UUID? = nil
+
+    var favoritedItems: [FavoriteItem] {
+        items.filter(\.isFavorited)
+    }
 
     func toggleFavorite(_ item: FavoriteItem) {
-        guard let i = items.firstIndex(where: { $0.id == item.id }) else { return }
-        items[i].isFavorited.toggle()
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        items[index].isFavorited.toggle()
+    }
+
+    // グリッドでハートをタップした時: お気に入り状態を切り替えつつ弾むアニメーションを発火
+    func toggleFavoriteWithBounce(_ item: FavoriteItem) {
+        toggleFavorite(item)
+        bouncingItemID = item.id
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            if self?.bouncingItemID == item.id {
+                self?.bouncingItemID = nil
+            }
+        }
+    }
+
+    // お気に入りリストでハートをタップした時: 縮小アニメーション分だけ遅らせて実際に削除する
+    func removeFavoriteAfterShrink(_ item: FavoriteItem, delay: TimeInterval = 0.25) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            self?.toggleFavorite(item)
+        }
     }
 }
 ```
+「いつ弾むか／いつ縮小して消えるか」というタイミングの計算をViewではなくVMに置く。
+こうすると `ItemCell`/`FavoriteRow` は「VMの状態を見て見た目を変えるだけ」のシンプルな
+Viewになり、タップ→状態変化→Viewが反応、という一方向の流れを保てる。
 
 ---
 
-## Step 2 — withAnimation の基本を学ぶ
-**ファイル:** `Views/ItemGridView.swift` を新規作成（まずアニメーションなし）
+## Step 2 — グリッドと弾むアニメーションを作る
+**ファイル:** `Views/ItemGridView.swift`、`Views/Components/ItemCell.swift` を新規作成
 
-### 2-1: グリッドの骨格（アニメーションなし）
+### 2-1: グリッドの骨格（まずアニメーションなし）
 ```swift
 import SwiftUI
 
@@ -88,7 +131,7 @@ struct ItemGridView: View {
                 }
                 .padding()
             }
-            .navigationTitle("フレームワーク")
+            .navigationTitle("Appleフレームワーク")
         }
     }
 }
@@ -99,131 +142,125 @@ struct ItemGridView: View {
 ```
 ▶ ここで確認: 3列グリッドが表示されること
 
-### 2-2: withAnimation でハートタップをアニメーション化する
+### 2-2: ItemCell を切り出し、VMの状態を見て弾むようにする
 ```swift
-// ItemCell struct を作り、グリッドセルを分離する
+import SwiftUI
+
 struct ItemCell: View {
     let item: FavoriteItem
-    let onToggle: () -> Void
+    @ObservedObject var viewModel: ItemViewModel
 
-    @State private var isAnimating = false  // アニメーション状態
+    // 弾むアニメーションの発火タイミングはVMが管理する（toggleFavoriteWithBounce）。
+    // Viewはその状態を見て見た目（scaleEffect）を反映するだけ。
+    private var isBouncing: Bool {
+        viewModel.bouncingItemID == item.id
+    }
 
     var body: some View {
         VStack(spacing: 8) {
             ZStack(alignment: .topTrailing) {
+                // アイテム背景
                 RoundedRectangle(cornerRadius: 16)
                     .fill(item.color.opacity(0.15))
                     .frame(height: 90)
                     .overlay {
                         Text(item.emoji)
                             .font(.system(size: 40))
-                            // scaleEffect: isAnimating が true の時に1.2倍に拡大
-                            .scaleEffect(isAnimating ? 1.2 : 1.0)
+                            // .scaleEffect でハートタップ時にアイテムが弾む
+                            .scaleEffect(isBouncing ? 1.2 : 1.0)
                     }
 
-                // ハートボタン
+                // ハートボタン（右上オーバーレイ）
                 Button {
-                    // withAnimation: このブロック内の状態変化がアニメーションされる
-                    withAnimation(.spring(response: 0.2, dampingFraction: 0.4)) {
-                        isAnimating = true
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+                        viewModel.toggleFavoriteWithBounce(item)
                     }
-                    // 0.3秒後に元に戻す
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        withAnimation(.spring(response: 0.3)) {
-                            isAnimating = false
-                        }
-                    }
-                    onToggle()
                 } label: {
                     Image(systemName: item.isFavorited ? "heart.fill" : "heart")
+                        .font(.title3)
                         .foregroundStyle(item.isFavorited ? .red : .secondary)
                         .padding(6)
                         .background(.regularMaterial, in: Circle())
                 }
                 .padding(6)
             }
-            Text(item.name).font(.caption.bold()).lineLimit(1)
+
+            Text(item.name)
+                .font(.subheadline.bold())
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
+        .padding(8)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 18))
     }
 }
-```
-▶ ここで確認: ハートタップで絵文字がバウンドすること
 
-### 2-3: LazyVGrid の ForEach で ItemCell を使う
+#Preview {
+    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+        ItemCell(item: FavoriteItem.samples[0], viewModel: ItemViewModel())
+        ItemCell(item: FavoriteItem.samples[1], viewModel: ItemViewModel())
+    }
+    .padding()
+}
+```
+`ItemCell` は `onToggle: () -> Void` のようなクロージャを受け取らず、`viewModel` を直接
+持つ。アニメーションの開始（`withAnimation`）はボタンのアクション内、つまりタップした
+その場で `viewModel.toggleFavoriteWithBounce(item)` を呼ぶだけでよい。
+
+▶ ここで確認: ハートタップで絵文字がバウンドし、ハートの塗りつぶしが切り替わること
+
+### 2-3: ItemGridView から ItemCell を呼び出す
 ```swift
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(viewModel.items) { item in
-                        ItemCell(item: item) {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
-                                viewModel.toggleFavorite(item)
-                            }
-                        }
+                        ItemCell(item: item, viewModel: viewModel)
                     }
                 }
 ```
-▶ ここで確認: ハートの塗りつぶしが切り替わる時にスプリングアニメーションがかかること
+▶ ここで確認: グリッド全体で12個のアイテムが3列に並ぶこと
 
 ---
 
-## Step 3 — matchedGeometryEffect を準備する
-**ファイル:** `Views/ItemGridView.swift` を編集
-
-### 3-1: @Namespace を宣言する
-```swift
-struct ItemGridView: View {
-    @ObservedObject var viewModel: ItemViewModel
-    // matchedGeometryEffect に必要: 画面間で共有するアニメーション空間
-    @Namespace private var animation
-```
-
-### 3-2: ItemCell にnamespaceを渡す
-```swift
-// ItemCell の引数に追加
-struct ItemCell: View {
-    let item: FavoriteItem
-    let namespace: Namespace.ID   // ← 追加
-    let onToggle: () -> Void
-```
-
-```swift
-// 呼び出し側で渡す
-                        ItemCell(item: item, namespace: animation) { ... }
-```
-
-### 3-3: ItemCell のハートに .matchedGeometryEffect を付ける
-```swift
-                Image(systemName: item.isFavorited ? "heart.fill" : "heart")
-                    .foregroundStyle(item.isFavorited ? .red : .secondary)
-                    .padding(6)
-                    .background(.regularMaterial, in: Circle())
-                    // matchedGeometryEffect: 同じID+Namespaceを持つViewと連動
-                    .matchedGeometryEffect(id: "heart-\(item.id)", in: namespace)
-```
-▶ 理解: `id: "heart-\(item.id)"` が同じViewが2か所にある時、表示が切り替わる時に「飛ぶ」アニメーションが起きる。まだ対応するViewがないので変化はない。
-
----
-
-## Step 4 — FavoritesView を作り matchedGeometryEffect を繋ぐ
+## Step 3 — FavoritesView でお気に入り一覧を表示する
 **ファイル:** `Views/FavoritesView.swift` を新規作成
 
-### 4-1: FavoritesView の骨格
+### 3-1: 空状態とリストの骨格
 ```swift
 import SwiftUI
 
 struct FavoritesView: View {
     @ObservedObject var viewModel: ItemViewModel
-    @Namespace private var animation  // グリッドと同じ名前空間を共有する必要がある
 
     var body: some View {
         NavigationStack {
-            List(viewModel.favoritedItems) { item in
-                HStack(spacing: 16) {
-                    Text(item.emoji).font(.title2)
-                    Text(item.name).font(.headline)
-                    Spacer()
-                    Image(systemName: "heart.fill")
-                        .font(.title2)
-                        .foregroundStyle(.red)
+            Group {
+                if viewModel.favoritedItems.isEmpty {
+                    ContentUnavailableView(
+                        "お気に入りなし",
+                        systemImage: "heart.slash",
+                        description: Text("グリッドでハートをタップして追加しましょう")
+                    )
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 12) {
+                            ForEach(viewModel.favoritedItems) { item in
+                                HStack(spacing: 16) {
+                                    Text(item.emoji).font(.title2)
+                                    Text(item.name).font(.headline)
+                                    Spacer()
+                                    Image(systemName: "heart.fill")
+                                        .font(.title2)
+                                        .foregroundStyle(.red)
+                                }
+                                .padding(12)
+                                .background(Color(.secondarySystemBackground))
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                            }
+                        }
+                        .padding()
+                    }
                 }
             }
             .navigationTitle("お気に入り")
@@ -235,86 +272,133 @@ struct FavoritesView: View {
     FavoritesView(viewModel: ItemViewModel())
 }
 ```
-▶ ここで確認: お気に入り済みアイテムがリスト表示されること
+`List`ではなく`ScrollView` + `LazyVStack`を使う。理由はStep 5で各行にカスタムの
+削除アニメーション（ハート縮小→消える）を付けるため、`List`の標準スワイプ削除UIに
+頼らず、行ごとに完全にカスタムなレイアウト・挙動を持たせたいから。
 
-### 4-2: matchedGeometryEffect の ID を合わせる（効果を体感する）
+▶ ここで確認: お気に入り済みアイテムがカード状に表示されること。0件だと空状態の
+メッセージが出ること
+
+---
+
+## Step 4 — TabView でグリッドとリストを繋ぐ
+**ファイル:** `Views/AnimatedMainView.swift` を新規作成
+
 ```swift
-// ⚠️ 重要: グリッドとリストで同じ Namespace を共有するためには、
-// どちらのViewも同じ @Namespace の ID を使う必要がある。
-// 今の構造では TabView が分離しているため、namespace を AnimatedMainView で作り、
-// 両方に渡す必要がある。
+import SwiftUI
 
-// 暫定確認: 同じFavoritesView内でハートをタップすると削除アニメーションが起きること
-                    Button {
-                        withAnimation(.spring(response: 0.4)) {
-                            viewModel.toggleFavorite(item)
-                        }
-                    } label: {
-                        Image(systemName: "heart.fill")
-                            .font(.title2).foregroundStyle(.red)
-                            .matchedGeometryEffect(id: "fav-heart-\(item.id)", in: animation)
-                    }
+struct AnimatedMainView: View {
+    @StateObject private var viewModel = ItemViewModel()
+    @State private var selectedTab = 0
+
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            ItemGridView(viewModel: viewModel)
+                .tabItem { Label("すべて", systemImage: "square.grid.2x2.fill") }
+                .tag(0)
+
+            FavoritesView(viewModel: viewModel)
+                .tabItem { Label("お気に入り", systemImage: "heart.fill") }
+                .badge(viewModel.favoritedItems.count)
+                .tag(1)
+        }
+    }
+}
+
+#Preview { AnimatedMainView() }
 ```
-▶ ここで確認: ハートタップでアイテムがリストから消えること（matchedGeometryEffectがない場合と比べる）
+`selectedTab` は今のところ画面遷移には使っていないが、タブを明示的に`.tag`で
+区別しておくことで、後からコードでタブを切り替える機能（例: 削除後に自動で
+「すべて」タブに戻る）を追加しやすくなる。
+
+▶ ここで確認: グリッドでハートをタップするとお気に入りタブのバッジ数が変わること
 
 ---
 
 ## Step 5 — .transition でリスト追加・削除アニメーションを追加する
-**ファイル:** `Views/FavoritesView.swift` を編集
+**ファイル:** `Views/FavoritesView.swift`、`Views/Components/FavoriteRow.swift` を編集/新規作成
 
-### 5-1: .transition の基本形
+### 5-1: バナーと .transition / .animation を追加する
 ```swift
-            if viewModel.favoritedItems.isEmpty {
-                ContentUnavailableView(
-                    "お気に入りなし",
-                    systemImage: "heart.slash",
-                    description: Text("グリッドでハートをタップして追加しましょう")
-                )
-            } else {
-                List {
-                    ForEach(viewModel.favoritedItems) { item in
-                        FavoriteRow(item: item, viewModel: viewModel)
-                            // transition: このViewが追加・削除される時のアニメーション
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .trailing).combined(with: .opacity),
-                                removal:   .move(edge: .leading).combined(with: .opacity)
-                            ))
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            // お気に入りカウントバナー
+                            HStack {
+                                Text("\(viewModel.favoritedItems.count) 件のお気に入り")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 8)
+
+                            // お気に入りリスト
+                            LazyVStack(spacing: 12) {
+                                ForEach(viewModel.favoritedItems) { item in
+                                    FavoriteRow(item: item, viewModel: viewModel)
+                                        // .transition: Viewが追加/削除される際のアニメーション
+                                        .transition(.asymmetric(
+                                            insertion: .move(edge: .trailing).combined(with: .opacity),
+                                            removal: .move(edge: .leading).combined(with: .opacity)
+                                        ))
+                                }
+                            }
+                            .padding()
+                        }
+                        // .animation: @Publishedの変化を自動的にアニメーション
+                        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.favoritedItems.map(\.id))
                     }
-                }
-                // animation: favoritedItems の変化時にアニメーションを実行
-                .animation(.spring(response: 0.4, dampingFraction: 0.8),
-                           value: viewModel.favoritedItems.map(\.id))
-            }
 ```
+`.animation(_:value:)` の `value` に `favoritedItems.map(\.id)` のような「ID配列」を
+渡すのがポイント。配列の中身（順序・要素数）が変わったときだけアニメーションが
+発火し、各アイテムの中身（`isFavorited`以外のプロパティ）の変化では再発火しない。
+
 ▶ ここで確認: グリッドでハートをタップするとFavoritesViewのリストがアニメーション付きで増減すること
 
 ### 5-2: FavoriteRow でハート縮小→削除のシーケンス
 ```swift
+import SwiftUI
+
 struct FavoriteRow: View {
     let item: FavoriteItem
     @ObservedObject var viewModel: ItemViewModel
+
+    // ハート縮小アニメーション用（このViewだけの見た目の状態）
     @State private var heartScale: CGFloat = 1.0
 
     var body: some View {
         HStack(spacing: 16) {
-            Text(item.emoji).font(.title2)
-            Text(item.name).font(.headline)
+            // アイコン
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(item.color.opacity(0.15))
+                    .frame(width: 56, height: 56)
+                Text(item.emoji)
+                    .font(.title2)
+            }
+
+            Text(item.name)
+                .font(.headline)
+
             Spacer()
+
+            // 削除ボタン（ハートをタップで解除）
             Button {
-                // ① 拡大
-                withAnimation(.spring(response: 0.2, dampingFraction: 0.4)) { heartScale = 1.4 }
-                // ② 縮小して消える
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                    withAnimation(.spring(response: 0.3)) { heartScale = 0.0 }
+                // ハートを縮小 → 縮小が終わったタイミングでVMに削除を依頼する。
+                // 削除後にこのView自体は破棄されるため、scaleを元に戻す処理は不要
+                // （以前はここで heartScale = 1.0 にリセットしていたが、リストの
+                // 退場アニメーションと競合して一瞬ハートが戻る見た目のバグになっていた）。
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.4)) {
+                    heartScale = 1.4
                 }
-                // ③ 実際に削除
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    viewModel.toggleFavorite(item)
-                    heartScale = 1.0
+                withAnimation(.spring(response: 0.3).delay(0.15)) {
+                    heartScale = 0.0
                 }
+                viewModel.removeFavoriteAfterShrink(item)
             } label: {
                 Image(systemName: "heart.fill")
-                    .font(.title2).foregroundStyle(.red)
+                    .font(.title2)
+                    .foregroundStyle(.red)
                     .scaleEffect(heartScale)
             }
         }
@@ -323,45 +407,30 @@ struct FavoriteRow: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
-```
-▶ ここで確認: ハートが拡大→縮小→消えるシーケンスアニメーションが動くこと
 
----
-
-## Step 6 — TabView でグリッドとリストを繋ぐ
-**ファイル:** `Views/AnimatedMainView.swift` を新規作成
-
-```swift
-import SwiftUI
-
-struct AnimatedMainView: View {
-    @StateObject private var viewModel = ItemViewModel()
-
-    var body: some View {
-        TabView {
-            ItemGridView(viewModel: viewModel)
-                .tabItem { Label("すべて", systemImage: "square.grid.2x2.fill") }
-
-            FavoritesView(viewModel: viewModel)
-                .tabItem { Label("お気に入り", systemImage: "heart.fill") }
-                .badge(viewModel.favoritedItems.count)
-        }
-    }
+#Preview {
+    FavoriteRow(item: FavoriteItem.samples[0], viewModel: ItemViewModel())
+        .padding()
 }
-
-#Preview { AnimatedMainView() }
 ```
-▶ ここで確認: グリッドでハートをタップするとお気に入りタブのバッジ数が変わること
+`DispatchQueue.main.asyncAfter`で遅延を作る代わりに`withAnimation(...).delay(0.15)`を
+使う。`viewModel.removeFavoriteAfterShrink(item)`はVM側で`asyncAfter`によって実際の
+削除（`toggleFavorite`）を遅らせるので、ハートが縮小し終わるタイミングと行が
+リストから消えるタイミングがちょうど合う。行が削除された後はViewごと破棄されるため
+`heartScale`を`1.0`に戻す必要はない。
+
+▶ ここで確認: ハートが拡大→縮小→消えるシーケンスアニメーションが動くこと。連続で
+何度かタップしても元のハートが一瞬戻って見えるような不自然な挙動がないこと
 
 ---
 
 ## 完成チェックリスト
-- [ ] ハートタップで絵文字がバウンスする（withAnimation + scaleEffect）
+- [ ] ハートタップで絵文字がバウンスする（withAnimation + scaleEffect、`ItemViewModel.bouncingItemID`経由）
 - [ ] スプリングアニメーションのパラメータ（response/dampingFraction）を変えて違いを体感した
 - [ ] .transition で追加・削除が左右スライドでアニメーションされる
-- [ ] FavoriteRow のハートが拡大→縮小→削除の3段階シーケンスで動く
+- [ ] FavoriteRow のハートが拡大→縮小→削除の3段階シーケンスで動き、削除後に見た目が戻らない
 - [ ] グリッドとお気に入りタブでお気に入り状態が同期している
-- [ ] matchedGeometryEffect の仕組み（Namespace + id）を理解した
+- [ ] アニメーションの発火タイミングをVM（ItemViewModel）に集約する設計の理由を説明できる
 
 ## アニメーションまとめ
 
@@ -371,12 +440,15 @@ struct AnimatedMainView: View {
 | `.scaleEffect(x)` | 拡大縮小 |
 | `.transition(.move(...))` | View追加・削除のトランジション |
 | `.animation(_:value:)` | 値の変化に自動追随 |
-| `matchedGeometryEffect` | 2箇所のViewを繋ぐヒーローアニメーション |
+| `.delay(_:)` | アニメーションの開始を遅らせ、シーケンスを作る |
 
 ---
 
-## 改良ノート（写経後の修正）
-- **`matchedGeometryEffect` が機能しないバグを修正**: グリッドとお気に入りタブが別々の `@Namespace` を持ち、かつ別タブ（同時にView階層に存在しない）のため、ヒーローアニメーションは原理的に発火しなかった。共有Namespaceでは解決できない構成だったため、各画面内で完結する「弾む/縮小」アニメーションに変更し、発火タイミングは `ItemViewModel`（`toggleFavoriteWithBounce`/`removeFavoriteAfterShrink`）で管理するようにした。
-- `FavoritesView` 側にあった手動 `DispatchQueue` 駆動と親の `.transition`/`.animation` が二重に掛かってグリッチしていた処理を解消（ハートを縮小させた後にVM経由で削除、スケールのリセット処理は削除）。
-- グリッド名・ハートアイコンの `.caption.bold()`/`.subheadline` を `.subheadline.bold()`/`.title3` に昇格。
-- `ItemCell`/`FavoriteRow` を `Views/Components/` へ分離。
+## 設計メモ: なぜ matchedGeometryEffect を使わなかったか
+最初は「グリッドのハート」と「お気に入りリストのハート」を `matchedGeometryEffect` で
+繋ぐヒーローアニメーションを試みたが、グリッドと一覧は別タブ（`TabView`）に属し
+同時にView階層へ存在しないため、`matchedGeometryEffect` は原理的に発火しない
+（共有Namespaceにしても解決できない構成だった）。
+そのため、画面間を跨ぐアニメーションではなく「各画面内で完結する弾む/縮小」に
+方針を変更し、発火タイミングは `ItemViewModel`（`toggleFavoriteWithBounce`/
+`removeFavoriteAfterShrink`）に集約した。これがStep 1〜5の設計になっている。
