@@ -18,13 +18,10 @@ struct ProductDetailView: View {
                     .frame(height: 240)
                     .overlay {
                         VStack(spacing: 8) {
-                            Text(current.category == .electronics ? "📱" :
-                                 current.category == .books ? "📚" :
-                                 current.category == .clothing ? "👔" :
-                                 current.category == .food ? "🍵" : "🏃")
+                            Text(current.category.emoji)
                                 .font(.system(size: 72))
                             Text(current.brand)
-                                .font(.caption)
+                                .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -56,7 +53,7 @@ struct ProductDetailView: View {
                         Text(String(format: "%.1f", current.rating))
                             .font(.headline)
                         Text("(\(current.reviewCount)件のレビュー)")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
 
@@ -79,7 +76,6 @@ struct ProductDetailView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                .padding(.horizontal)
 
                 // カートに追加ボタン
                 Button {
@@ -93,8 +89,9 @@ struct ProductDetailView: View {
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
-                .padding(.horizontal)
             }
+            // 画像・本文・ボタンの左右マージンを統一（画像だけフルブリードにしない）
+            .padding(.horizontal)
             .padding(.bottom, 24)
         }
         .navigationTitle(current.name)

@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 struct Product: Identifiable {
     let id: UUID
@@ -47,6 +47,30 @@ enum ProductCategory: String, CaseIterable, Identifiable {
     case sports = "スポーツ"
 
     var id: String { rawValue }
+
+    // 絵文字/色をここに一本化する（行・詳細の両Viewから共通利用）。
+    // 個別Viewでswitch/三項演算を重複させると non-exhaustive な抜け漏れが起きやすい。
+    var emoji: String {
+        switch self {
+        case .all: return "🛍"
+        case .electronics: return "📱"
+        case .books: return "📚"
+        case .clothing: return "👔"
+        case .food: return "🍵"
+        case .sports: return "🏃"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .all: return .gray
+        case .electronics: return .blue
+        case .books: return .orange
+        case .clothing: return .purple
+        case .food: return .green
+        case .sports: return .red
+        }
+    }
 }
 
 extension Product {

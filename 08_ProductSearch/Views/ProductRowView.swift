@@ -8,10 +8,10 @@ struct ProductRowView: View {
         HStack(spacing: 12) {
             // 商品アイコン（カテゴリ別）
             RoundedRectangle(cornerRadius: 10)
-                .fill(categoryColor(for: product.category).opacity(0.15))
+                .fill(product.category.color.opacity(0.15))
                 .frame(width: 60, height: 60)
                 .overlay {
-                    Text(categoryEmoji(for: product.category))
+                    Text(product.category.emoji)
                         .font(.title2)
                 }
 
@@ -20,14 +20,14 @@ struct ProductRowView: View {
                     .font(.subheadline.bold())
                     .lineLimit(1)
                 Text(product.brand)
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                 HStack(spacing: 4) {
                     Text(viewModel.starsString(for: product.rating))
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(.orange)
                     Text("(\(product.reviewCount))")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -47,31 +47,9 @@ struct ProductRowView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(12)
+        .padding()
         .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-
-    private func categoryColor(for category: ProductCategory) -> Color {
-        switch category {
-        case .electronics: return .blue
-        case .books: return .orange
-        case .clothing: return .purple
-        case .food: return .green
-        case .sports: return .red
-        case .all: return .gray
-        }
-    }
-
-    private func categoryEmoji(for category: ProductCategory) -> String {
-        switch category {
-        case .electronics: return "📱"
-        case .books: return "📚"
-        case .clothing: return "👔"
-        case .food: return "🍵"
-        case .sports: return "🏃"
-        case .all: return "🛍"
-        }
     }
 }
 
