@@ -1,7 +1,9 @@
 import SwiftUI
+import SwiftData
 
 struct AddTodoView: View {
     @ObservedObject var viewModel: TodoViewModel
+    @Environment(\.modelContext) private var modelContext
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -10,12 +12,12 @@ struct AddTodoView: View {
                 .textFieldStyle(.roundedBorder)
                 .focused($isFocused)
                 .onSubmit {
-                    viewModel.addItem()
+                    viewModel.addItem(context: modelContext)
                     isFocused = true
                 }
 
             Button(action: {
-                viewModel.addItem()
+                viewModel.addItem(context: modelContext)
                 isFocused = true
             }) {
                 Image(systemName: "plus.circle.fill")
@@ -37,4 +39,5 @@ struct AddTodoView: View {
         Spacer()
         AddTodoView(viewModel: TodoViewModel())
     }
+    .modelContainer(for: TodoItem.self, inMemory: true)
 }

@@ -1,27 +1,24 @@
 import Foundation
-import Combine
+import SwiftData
 import SwiftUI
 
-class TodoViewModel: ObservableObject {
-    @Published var items: [TodoItem] = TodoItem.samples
+final class TodoViewModel: ObservableObject {
     @Published var newTitle: String = ""
 
-    var completedCount: Int { items.filter(\.isCompleted).count }
-    var pendingCount: Int { items.filter { !$0.isCompleted }.count }
-
-    func addItem() {
+    func addItem(context: ModelContext) {
         let trimmed = newTitle.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
-        items.append(TodoItem(title: trimmed))
+        context.insert(TodoItem(title: trimmed))
         newTitle = ""
     }
 
     func toggleItem(_ item: TodoItem) {
-        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
-        items[index].isCompleted.toggle()
+        item.isCompleted.toggle()
     }
 
-    func deleteItems(at offsets: IndexSet) {
-        items.remove(atOffsets: offsets)
+    func deleteItems(_ items: [TodoItem], context: ModelContext) {
+        for item in items {
+            context.delete(item)
+        }
     }
 }

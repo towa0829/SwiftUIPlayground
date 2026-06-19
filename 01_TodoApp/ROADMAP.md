@@ -7,17 +7,20 @@
 ## Step 1 — データモデルを作る
 **ファイル:** `Models/TodoItem.swift` を新規作成して、最初から書く
 
-### 1-1: struct の骨格
+### 1-1: @Model の骨格
 ```swift
 import Foundation
+import SwiftData
 
-struct TodoItem: Identifiable {
-    let id: UUID
+@Model
+final class TodoItem {
+    var id: UUID
     var title: String
     var isCompleted: Bool
 }
 ```
 ▶ ここで確認: エラーなくビルドできること
+▶ 理解: `@Model` を付けると、SwiftDataがこのクラスを自動的に永続化対象として扱う。`struct` ではなく `final class` にする必要がある（SwiftDataは参照型のみ管理できる）。
 
 ### 1-2: init を追加（デフォルト引数付き）
 ```swift
@@ -57,39 +60,37 @@ extension TodoItem {
 ### 2-1: ObservableObject の骨格
 ```swift
 import Foundation
-import Combine
+import SwiftData
+import SwiftUI
 
-class TodoViewModel: ObservableObject {
-    @Published var items: [TodoItem] = TodoItem.samples
+final class TodoViewModel: ObservableObject {
     @Published var newTitle: String = ""
 }
 ```
 ▶ ここで確認: エラーなくビルドできること
+▶ 理解: SwiftData化したことで、ViewModelはもう `items` 配列を持たない。一覧の表示は次のStepでViewが `@Query` から直接取得する。ViewModelは「追加・削除・トグル」という操作ロジックだけを担当する。
 
-### 2-2: CRUD メソッドを追加
+### 2-2: CRUD メソッドを追加（ModelContextを引数で受け取る）
 ```swift
-    func addItem() {
+    func addItem(context: ModelContext) {
         let trimmed = newTitle.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
-        items.append(TodoItem(title: trimmed))
+        context.insert(TodoItem(title: trimmed))
         newTitle = ""
     }
 
     func toggleItem(_ item: TodoItem) {
-        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
-        items[index].isCompleted.toggle()
+        item.isCompleted.toggle()
+        // TodoItemはクラス（参照型）なので、プロパティを書き換えるだけでSwiftDataが自動的に保存する
     }
 
-    func deleteItems(at offsets: IndexSet) {
-        items.remove(atOffsets: offsets)
+    func deleteItems(_ items: [TodoItem], context: ModelContext) {
+        for item in items {
+            context.delete(item)
+        }
     }
 ```
-
-### 2-3: 集計プロパティを追加
-```swift
-    var completedCount: Int { items.filter(\.isCompleted).count }
-    var pendingCount:   Int { items.filter { !$0.isCompleted }.count }
-```
+▶ 理解: `ModelContext` は「保存・削除を実行する窓口」。Viewが `@Environment(\.modelContext)` から取得し、メソッドを呼ぶたびに引数として渡す。
 
 ---
 
@@ -202,19 +203,29 @@ struct AddTodoView: View {
 ## Step 5 — List + NavigationStack で一覧画面を作る
 **ファイル:** `Views/TodoListView.swift` を新規作成
 
-### 5-1: List の骨格
+### 5-1: List + @Query の骨格
 ```swift
 import SwiftUI
+import SwiftData
 
 struct TodoListView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \TodoItem.createdAt) private var items: [TodoItem]
     @StateObject private var viewModel = TodoViewModel()
 
     var body: some View {
         List {
-            ForEach(viewModel.items) { item in
+            ForEach(items) { item in
                 TodoRowView(item: item) {
                     viewModel.toggleItem(item)
                 }
+            }
+        }
+        .task {
+            // ストアが空（初回起動）ならサンプルデータを投入する
+            guard items.isEmpty else { return }
+            for sample in TodoItem.samples {
+                modelContext.insert(sample)
             }
         }
     }
@@ -222,9 +233,11 @@ struct TodoListView: View {
 
 #Preview {
     TodoListView()
+        .modelContainer(for: TodoItem.self, inMemory: true)
 }
 ```
 ▶ ここで確認: Preview でリストが表示されること
+▶ 理解: `@Query` は常に最新のSwiftDataの内容を自動取得するプロパティ。`viewModel.items` のように手動で配列を保持する必要がなくなる。Previewでは `.modelContainer(for:, inMemory: true)` を付けて、実機のデータに影響しないメモリ上だけのストアを使う。
 
 ### 5-2: NavigationStack + タイトル + EditButton を追加
 ```swift
@@ -362,3 +375,4 @@ struct TodoDetailView: View {
 - [ ] 右スワイプで完了トグルできる
 - [ ] タップで詳細画面に遷移する
 - [ ] 詳細画面から完了/未完了を切り替えられる
+- [ ] アプリを再起動してもタスクが残っている（SwiftDataの永続化を確認）

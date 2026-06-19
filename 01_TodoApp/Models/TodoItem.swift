@@ -1,7 +1,9 @@
 import Foundation
+import SwiftData
 
-struct TodoItem: Identifiable {
-    let id: UUID
+@Model
+final class TodoItem {
+    var id: UUID
     var title: String
     var isCompleted: Bool
     var createdAt: Date
