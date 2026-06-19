@@ -1,6 +1,9 @@
 import SwiftUI
+import SwiftData
 
 struct HabitListView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var habits: [Habit]
     // @StateObject: このViewがHabitStoreを所有・管理する
     // Viewが破棄されるまでインスタンスが保持される
     @StateObject private var store = HabitStore()
@@ -11,11 +14,11 @@ struct HabitListView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     // 全体進捗サマリー
-                    SummaryCard(store: store)
+                    SummaryCard(habits: habits)
                         .padding(.horizontal)
 
                     // 習慣リスト
-                    ForEach(store.habits) { habit in
+                    ForEach(habits) { habit in
                         NavigationLink(destination: HabitDetailView(habit: habit, store: store)) {
                             HabitRowView(habit: habit, store: store)
                                 .padding(.horizontal)
@@ -39,10 +42,21 @@ struct HabitListView: View {
             .sheet(isPresented: $showAddHabit) {
                 AddHabitView(store: store)
             }
+            .task {
+                seedIfNeeded()
+            }
+        }
+    }
+
+    private func seedIfNeeded() {
+        guard habits.isEmpty else { return }
+        for sample in Habit.samples {
+            modelContext.insert(sample)
         }
     }
 }
 
 #Preview {
     HabitListView()
+        .modelContainer(for: Habit.self, inMemory: true)
 }

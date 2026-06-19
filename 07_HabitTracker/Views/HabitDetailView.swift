@@ -4,10 +4,8 @@ struct HabitDetailView: View {
     let habit: Habit
     @ObservedObject var store: HabitStore
 
-    // storeからこのhabitの最新状態を取得
-    var currentHabit: Habit {
-        store.habits.first(where: { $0.id == habit.id }) ?? habit
-    }
+    // Habitはクラス（参照型）のため、habit自身が常に最新状態を反映する
+    private var currentHabit: Habit { habit }
 
     var body: some View {
         ScrollView {

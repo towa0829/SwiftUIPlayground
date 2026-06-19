@@ -1,8 +1,16 @@
 import SwiftUI
 
 struct SummaryCard: View {
-    // @ObservedObject: 外部から受け取ったObservableObjectを購読
-    @ObservedObject var store: HabitStore
+    let habits: [Habit]
+
+    private var totalCompleted: Int {
+        habits.filter(\.isCompleted).count
+    }
+
+    private var overallProgress: Double {
+        guard !habits.isEmpty else { return 0 }
+        return habits.reduce(0) { $0 + $1.progress } / Double(habits.count)
+    }
 
     var body: some View {
         VStack(spacing: 12) {
@@ -11,17 +19,17 @@ struct SummaryCard: View {
                     Text("今日の進捗")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    Text("\(store.totalCompleted) / \(store.habits.count) 完了")
+                    Text("\(totalCompleted) / \(habits.count) 完了")
                         .font(.title2.bold())
                 }
                 Spacer()
-                // ProgressView: 進捗を視覚的に表示（円形）
-                ProgressView(value: store.overallProgress)
+                // ProgressView: 進捗を視覚的に表示（円形、CircularProgressStyleを適用）
+                ProgressView(value: overallProgress)
                     .progressViewStyle(CircularProgressStyle())
             }
 
             // ProgressView: 線形（デフォルト）
-            ProgressView(value: store.overallProgress)
+            ProgressView(value: overallProgress)
                 .tint(.green)
         }
         .padding()
@@ -31,7 +39,7 @@ struct SummaryCard: View {
 }
 
 #Preview {
-    SummaryCard(store: HabitStore())
+    SummaryCard(habits: Habit.samples)
         .padding()
         .background(Color(.systemGroupedBackground))
 }

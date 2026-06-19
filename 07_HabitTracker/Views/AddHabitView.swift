@@ -1,15 +1,16 @@
 import SwiftUI
+import SwiftData
 
 struct AddHabitView: View {
     @ObservedObject var store: HabitStore
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
     @State private var name = ""
     @State private var emoji = "⭐️"
     @State private var targetCount = 1
-    @State private var selectedColor: Color = .blue
+    @State private var selectedColorName = "blue"
 
-    let colorOptions: [Color] = [.blue, .green, .orange, .red, .purple, .pink, .teal]
     let emojiOptions = ["⭐️", "🏃", "📚", "💧", "🧘", "🌍", "🍎", "💪", "🎯", "🎵"]
 
     var body: some View {
@@ -39,15 +40,18 @@ struct AddHabitView: View {
 
                 Section("カラー") {
                     HStack(spacing: 12) {
-                        ForEach(colorOptions, id: \.self) { color in
+                        ForEach(Habit.colorOptions, id: \.self) { colorName in
                             Circle()
-                                .fill(color)
+                                .fill(Habit.color(named: colorName))
                                 .frame(width: 32, height: 32)
                                 .overlay(
-                                    Circle().stroke(Color.white, lineWidth: selectedColor == color ? 3 : 0)
+                                    Circle().stroke(Color.white, lineWidth: selectedColorName == colorName ? 3 : 0)
                                 )
-                                .shadow(color: color.opacity(0.5), radius: selectedColor == color ? 4 : 0)
-                                .onTapGesture { selectedColor = color }
+                                .shadow(
+                                    color: Habit.color(named: colorName).opacity(0.5),
+                                    radius: selectedColorName == colorName ? 4 : 0
+                                )
+                                .onTapGesture { selectedColorName = colorName }
                         }
                     }
                     .padding(.vertical, 4)
@@ -65,7 +69,8 @@ struct AddHabitView: View {
                             name: name,
                             emoji: emoji,
                             target: targetCount,
-                            color: selectedColor
+                            colorName: selectedColorName,
+                            context: modelContext
                         )
                         dismiss()
                     }
@@ -79,4 +84,5 @@ struct AddHabitView: View {
 
 #Preview {
     AddHabitView(store: HabitStore())
+        .modelContainer(for: Habit.self, inMemory: true)
 }
