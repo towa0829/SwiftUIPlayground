@@ -24,13 +24,13 @@ SwiftUIを実践的に学ぶための10教材セット。
 
 | # | 教材 | 学習テーマ | 推定時間 |
 |---|------|-----------|---------|
-| 01 | [TodoApp](01_TodoApp/) | `List` / `NavigationStack` / `SwipeActions` | 1〜2h |
+| 01 | [TodoApp](01_TodoApp/) | `List` / `NavigationStack` / `SwipeActions` / `SwiftData` | 1〜2h |
 | 02 | [SettingsApp](02_SettingsApp/) | `Form` / `Toggle` / `Picker` / `AppStorage` | 1〜2h |
 | 03 | [ProfileCard](03_ProfileCard/) | `ZStack` / `overlay` / `Sheet` | 1〜2h |
 | 04 | [PhotoGallery](04_PhotoGallery/) | `ScrollView` / `LazyVGrid` / `AsyncImage` | 1〜2h |
 | 05 | [TabSNS](05_TabSNS/) | `TabView` / `NavigationStack` | 2〜3h |
 | 06 | [PostModal](06_PostModal/) | `Sheet` / `FullScreenCover` / `@Binding` | 1〜2h |
-| 07 | [HabitTracker](07_HabitTracker/) | `ObservableObject` / `@StateObject` / `ProgressView` | 2〜3h |
+| 07 | [HabitTracker](07_HabitTracker/) | `ObservableObject` / `@StateObject` / `ProgressView` / `SwiftData` | 2〜3h |
 | 08 | [ProductSearch](08_ProductSearch/) | `.searchable` / フィルタリング | 1〜2h |
 | 09 | [WeatherDashboard](09_WeatherDashboard/) | `EnvironmentObject` / MVVM | 2〜3h |
 | 10 | [AnimatedFavorite](10_AnimatedFavorite/) | `Animation` / `matchedGeometryEffect` | 2〜3h |
@@ -48,9 +48,11 @@ SwiftUIを実践的に学ぶための10教材セット。
 
 ```
 教材名/
-├── Models/         # データの形（struct）
+├── Models/         # データの形（struct、またはSwiftData永続化対象は@Model final class）
 ├── ViewModels/     # ビジネスロジック（ObservableObject）
 ├── Views/          # 画面UI（SwiftUI View）
 ├── README.md       # テーマ解説・APIリファレンス・発展課題
 └── ROADMAP.md      # 写経の手順書（何をどの順で書くか）
 ```
+
+> 01 (TodoApp) と 07 (HabitTracker) はSwiftDataで永続化しているため、`Models/` 配下のデータ定義は `@Model final class` になっている（他の教材は `struct`）。
