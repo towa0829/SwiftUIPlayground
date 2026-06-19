@@ -443,8 +443,6 @@ struct AddHabitView: View {
     @State private var selectedColorName = "blue"
 
     let emojiOptions = ["⭐️", "🏃", "📚", "💧", "🧘", "🌍", "🍎", "💪", "🎯", "🎵"]
-```
-▶ 理解: カラー選択は `Color` の配列ではなく `Habit.colorOptions`（`[String]`、Step 1-3で定義済み）から選ぶ。選んだ色は `Habit.color(named:)` でその場で `Color` に変換して表示する。
 
     var body: some View {
         NavigationStack {
@@ -519,6 +517,7 @@ struct AddHabitView: View {
     AddHabitView(store: HabitStore())
 }
 ```
+▶ 理解: カラー選択は `Color` の配列ではなく `Habit.colorOptions`（`[String]`、Step 1-3で定義済み）から選ぶ。選んだ色は `Habit.color(named:)` でその場で `Color` に変換して表示する。
 
 ### 6-2: HabitListView に sheet を追加
 ```swift
@@ -549,10 +548,8 @@ struct HabitDetailView: View {
     let habit: Habit
     @ObservedObject var store: HabitStore
 
-    // storeからこのhabitの最新状態を取得
-    var currentHabit: Habit {
-        store.habits.first(where: { $0.id == habit.id }) ?? habit
-    }
+    // Habitはクラス（参照型）のため、habit自身が常に最新状態を反映する
+    private var currentHabit: Habit { habit }
 
     var body: some View {
         ScrollView {
@@ -568,7 +565,7 @@ struct HabitDetailView: View {
                 }
                 .padding(.top)
 ```
-▶ 理解: `currentHabit` は `habit`（NavigationLinkに渡した時点のスナップショット）ではなく、毎回 `store.habits` から最新を引き直す計算プロパティ。`store` が更新されるたびにこちらも再評価され、リストの操作と詳細画面の表示が常に一致する。
+▶ 理解: `Habit` はSwiftDataの `@Model`（クラス・参照型）。`store.increment`などの操作は配列ではなく `habit` インスタンス自身のプロパティを書き換えるので、`currentHabit` は単に `habit` を返すだけでよい。再度配列から検索し直す必要はない。
 
 ### 7-2: 大きな円形プログレスを ZStack で自作する
 ```swift
@@ -666,7 +663,7 @@ struct HabitDetailView: View {
 
 ### 7-5: HabitListView の各行に NavigationLink を追加
 ```swift
-                    ForEach(store.habits) { habit in
+                    ForEach(habits) { habit in
                         NavigationLink(destination: HabitDetailView(habit: habit, store: store)) {
                             HabitRowView(habit: habit, store: store)
                                 .padding(.horizontal)
