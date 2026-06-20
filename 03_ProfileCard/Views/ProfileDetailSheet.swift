@@ -101,7 +101,7 @@ struct ProfileDetailSheet: View {
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(viewModel.followStatus(for: profile) ? Color.secondary.opacity(0.2) : profile.accentColor)
-                            .foregroundStyle(viewModel.followStatus(for: profile) ? .primary : .white)
+                            .foregroundStyle(viewModel.followStatus(for: profile) ? Color.primary : Color.white)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .padding(.horizontal)
