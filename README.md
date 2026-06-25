@@ -1,7 +1,7 @@
 # SwiftUI 写経学習教材
 
-SwiftUIを実践的に学ぶための10教材セット。
-各教材は独立して動作し、1〜3時間で完成できる規模です。
+SwiftUIを実践的に学ぶための12教材セット。
+各教材は独立して動作し、1〜4時間で完成できる規模です。
 
 ## 各教材の使い方
 
@@ -34,6 +34,8 @@ SwiftUIを実践的に学ぶための10教材セット。
 | 08 | [ProductSearch](08_ProductSearch/) | `.searchable` / フィルタリング | 1〜2h |
 | 09 | [WeatherDashboard](09_WeatherDashboard/) | `EnvironmentObject` / MVVM | 2〜3h |
 | 10 | [AnimatedFavorite](10_AnimatedFavorite/) | `Animation` / `matchedGeometryEffect` | 2〜3h |
+| 11 | [SwipeCards](11_SwipeCards/) | `DragGesture` / `offset` / `rotationEffect` | 2〜3h |
+| 12 | [Game2048](12_Game2048/) | `DragGesture` / 位置アニメーション / `.transition` | 3〜4h |
 
 ## 推奨学習順序
 
@@ -42,6 +44,7 @@ SwiftUIを実践的に学ぶための10教材セット。
 04 → 05         レイアウト応用（Grid / TabView）
 06 → 07         状態管理（Sheet / ObservableObject）
 08 → 09 → 10   発展（Search / EnvironmentObject / Animation）
+11 → 12         ジェスチャー & ゲーム（DragGesture / 位置アニメーション）
 ```
 
 ## MVVM 構成（全教材共通）
